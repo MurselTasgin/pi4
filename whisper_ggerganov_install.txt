@@ -1,0 +1,57 @@
+git clone https://github.com/ggerganov/whisper.cpp
+sudo apt install libsdl2-dev
+cd whisper.cpp
+make -j stream
+./models/download-ggml-model.sh tiny.en
+./stream -m models/ggml-tiny.en.bin --step 4000 --length 8000 -c 0 -t 4 -ac 512
+
+./stream -m models/ggml-base.bin --step 4000 --length 8000 -c 0 -t 4 -ac 512
+
+
+LARGE MODEL DOWNLOAD
+./models/download-ggml-model.sh large-v2
+
+
+LARGE MODEL Q5 DOWNLOAD
+./models/download-ggml-model.sh medium-q5_0
+./stream -m models/ggml-medium-q5_0.bin --step 4000 --length 8000 -c 0 -t 4 -ac 512
+
+
+TUM MODELLER
+-rw-r--r-- 1 kerem kerem     575451 Dec 19 20:51 for-tests-ggml-base.bin
+-rw-r--r-- 1 kerem kerem     586836 Dec 19 20:51 for-tests-ggml-base.en.bin
+-rw-r--r-- 1 kerem kerem     575451 Dec 19 20:51 for-tests-ggml-large.bin
+-rw-r--r-- 1 kerem kerem     575451 Dec 19 20:51 for-tests-ggml-medium.bin
+-rw-r--r-- 1 kerem kerem     586836 Dec 19 20:51 for-tests-ggml-medium.en.bin
+-rw-r--r-- 1 kerem kerem     575451 Dec 19 20:51 for-tests-ggml-small.bin
+-rw-r--r-- 1 kerem kerem     586836 Dec 19 20:51 for-tests-ggml-small.en.bin
+-rw-r--r-- 1 kerem kerem     575451 Dec 19 20:51 for-tests-ggml-tiny.bin
+-rw-r--r-- 1 kerem kerem     586836 Dec 19 20:51 for-tests-ggml-tiny.en.bin
+-rw-r--r-- 1 kerem kerem  147951465 Mar 22  2023 ggml-base.bin
+-rw-r--r-- 1 kerem kerem 3094623691 Mar 22  2023 ggml-large-v2.bin
+-rw-r--r-- 1 kerem kerem  539212467 Aug 21 22:42 ggml-medium-q5_0.bin
+-rw-r--r-- 1 kerem kerem   77704715 Mar 22  2023 ggml-tiny.en.bin
+
+TÜRKÇE için çalıştırma komutları:
+1- Terminal açılır.
+2- conda activate kenv1 --> komutu girilir
+3- cd /home/kerem/projects/whisper.cpp --> komutu ileWhisper'ın CPP versiyonunun olduğu dizine geçilir. 
+4- ./stream -m models/ggml-base.bin --step 4000 --length 8000 -c 0 -t 4 -ac 512 -l tr  --> Komutu ile sürekli dinleyen ve whisper ile translate eden model çalıştırılır. 
+
+
+-----------------------------------------------------------------------
+Kafka'ya yazmak için CPP library yükleme
+- apt install librdkafka-dev
+
+
+------------------------------------------------------------------------
+Dinlemelerin Kafka'ya gönderilmesi için whisper.cpp/examples dizini altındaki stream.cpp değiştirildi. 
+whisper.cpp folder içindeki Makefile değiştirildi: 
+   - Bu satır eklendi: KAFKA_LIBS = -lrdkafka++ -lrdkafka 
+   - stream compile için kullanılan satıra KAFKA_LIBS eklendi:
+     stream: examples/stream/stream.cpp $(SRC_COMMON) $(SRC_COMMON_SDL) $(WHISPER_OBJ)
+	$(CXX) $(CXXFLAGS) examples/stream/stream.cpp $(SRC_COMMON) $(SRC_COMMON_SDL) $(WHISPER_OBJ) -o stream $(KAFKA_LIBS) $(CC_SDL) $(LDFLAGS) 
+
+Değişiklikler sonrasında yeniden compile edildi: 
+> cd whisper.cpp 
+> make -j stream
